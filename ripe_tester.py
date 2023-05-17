@@ -29,13 +29,15 @@ code_ptr = [
  "funcptrheap", "funcptrbss", "funcptrdata",
  "structfuncptrstack", "structfuncptrheap",
  "structfuncptrbss", "structfuncptrdata",
- "longjmpstackvar", "longjmpstackparam",
- "longjmpheap", "longjmpbss", "longjmpdata"
+ #"longjmpstackvar", "longjmpstackparam",
+ #"longjmpheap", "longjmpbss", "longjmpdata"
 ]
 
 attacks = [
  # "nonop","simplenop",
- "simplenopequival", "r2libc", "rop"]
+ #"simplenopequival", 
+ "r2libc",
+"rop"]
 
 funcs = [
     "memcpy", "strcpy", "strncpy", "sprintf", "snprintf",
@@ -188,7 +190,7 @@ for compiler in compilers:
               ## Dr. Memory
               # cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | drmemory -no_check_uninitialized -crash_at_error -- ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
 
-              cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
+              cmdline = "(touch /tmp/ripe-eval/f_xxxx | ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
               os.system(cmdline)
 
               log_entry = open("/tmp/ripe_log","r").read()

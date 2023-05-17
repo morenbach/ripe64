@@ -122,7 +122,7 @@ void gadget4(int a, int b);
    #define ROTATE 0x9
 #elif __x86_64__
    #define ROTATE 0x11
-#elif __arm__
+#elif __aarch64__
    #define ROTATE 0x0
 #else
    #error The exploit does not support this architecture
