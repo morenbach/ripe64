@@ -79,8 +79,191 @@ static boolean output_error_msg = TRUE;
 
 static boolean no_attack = FALSE;
 
+int bar(const char *command) {
+	int j;
+	char buffer[256];
+	for(j=0;j<1;j++);
+
+	system(command);
+}
+
+
+//#include "support.h"
+#include "picojpeg.h"
+#include <string.h>
+
+/* This scale factor will be changed to equalise the runtime of the
+   benchmarks. */
+#define LOCAL_SCALE_FACTOR 6
+
+const unsigned char jpeg_data[] = {
+  0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46,
+  0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
+  0x00, 0x48, 0x00, 0x00, 0xff, 0xdb, 0x00, 0x43,
+  0x00, 0x50, 0x37, 0x3c, 0x46, 0x3c, 0x32, 0x50,
+  0x46, 0x41, 0x46, 0x5a, 0x55, 0x50, 0x5f, 0x78,
+  0xc8, 0x82, 0x78, 0x6e, 0x6e, 0x78, 0xf5, 0xaf,
+  0xb9, 0x91, 0xc8, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xdb, 0x00, 0x43, 0x01, 0x55, 0x5a,
+  0x5a, 0x78, 0x69, 0x78, 0xeb, 0x82, 0x82, 0xeb,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xc0,
+  0x00, 0x11, 0x08, 0x00, 0x40, 0x00, 0x33, 0x03,
+  0x01, 0x11, 0x00, 0x02, 0x11, 0x01, 0x03, 0x11,
+  0x01, 0xff, 0xc4, 0x00, 0x18, 0x00, 0x00, 0x03,
+  0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02,
+  0x03, 0x00, 0x04, 0xff, 0xc4, 0x00, 0x26, 0x10,
+  0x00, 0x02, 0x02, 0x01, 0x03, 0x03, 0x04, 0x03,
+  0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x01, 0x02, 0x00, 0x11, 0x03, 0x12, 0x21, 0x31,
+  0x41, 0x61, 0x71, 0x04, 0x22, 0x53, 0x91, 0x13,
+  0x23, 0x51, 0x62, 0xff, 0xc4, 0x00, 0x15, 0x01,
+  0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x01, 0xff, 0xc4, 0x00, 0x14, 0x11, 0x01,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0xff, 0xda, 0x00, 0x0c, 0x03, 0x01, 0x00, 0x02,
+  0x11, 0x03, 0x11, 0x00, 0x3f, 0x00, 0xc7, 0x88,
+  0x0b, 0x28, 0x4d, 0x66, 0xe1, 0x02, 0xcf, 0x58,
+  0x05, 0x45, 0x88, 0x00, 0xa9, 0x10, 0x34, 0x0e,
+  0xaf, 0x6f, 0x68, 0x54, 0x33, 0x64, 0x03, 0x61,
+  0x02, 0x6a, 0x49, 0xdb, 0x49, 0x84, 0x59, 0x50,
+  0x91, 0x50, 0xa0, 0x3d, 0xa4, 0x80, 0x7c, 0x88,
+  0x18, 0xd5, 0x48, 0x05, 0x09, 0x43, 0xeb, 0xff,
+  0x00, 0x2b, 0xf5, 0x02, 0x78, 0xd4, 0x1c, 0xac,
+  0x48, 0x10, 0x8e, 0xb5, 0x55, 0xa8, 0x0c, 0xa5,
+  0x2f, 0xdb, 0x52, 0x2a, 0x19, 0x53, 0xf6, 0x82,
+  0x04, 0xa1, 0x0e, 0x45, 0xf8, 0x84, 0x0d, 0xad,
+  0x7e, 0x21, 0x20, 0xd0, 0x30, 0x04, 0x93, 0x5c,
+  0x99, 0x43, 0xe2, 0xc6, 0x57, 0x20, 0xd4, 0xd7,
+  0x7d, 0x20, 0x3a, 0xe1, 0x40, 0xf6, 0x49, 0xf1,
+  0x20, 0xa3, 0x8b, 0x17, 0xc5, 0x09, 0x47, 0x26,
+  0x35, 0x05, 0xb5, 0x1e, 0x20, 0x75, 0x02, 0x95,
+  0xc0, 0xfa, 0x81, 0xcf, 0x52, 0x0c, 0x6c, 0x0d,
+  0xa0, 0x25, 0xbd, 0xdd, 0xd1, 0xf3, 0x2a, 0x28,
+  0x43, 0xb0, 0x04, 0x0e, 0x3a, 0xdc, 0x29, 0xb2,
+  0x13, 0xf8, 0x6a, 0x11, 0x25, 0x53, 0x22, 0xa9,
+  0x7d, 0xe0, 0x2e, 0xa8, 0x06, 0xc1, 0xda, 0xa0,
+  0x29, 0x21, 0x4d, 0x30, 0x35, 0x2a, 0x28, 0xb9,
+  0x17, 0x85, 0x06, 0x15, 0x50, 0x97, 0x8c, 0xd8,
+  0xef, 0x20, 0xe5, 0x01, 0xf9, 0xd3, 0x52, 0xa1,
+  0xb5, 0x0e, 0xb0, 0x14, 0x90, 0x39, 0x32, 0x28,
+  0xe2, 0x60, 0xd9, 0x17, 0xcc, 0xa2, 0xd9, 0xb1,
+  0x02, 0x35, 0x58, 0x1e, 0x60, 0x0c, 0x58, 0x95,
+  0x06, 0xa6, 0x20, 0xf8, 0x90, 0x3b, 0x67, 0x41,
+  0xb0, 0xb3, 0x02, 0x4f, 0x9c, 0x55, 0x40, 0x8e,
+  0xb5, 0xfe, 0x09, 0x51, 0x12, 0xd7, 0x01, 0xfd,
+  0x3b, 0x11, 0x99, 0x7b, 0x98, 0x55, 0x7d, 0x4b,
+  0xbb, 0x64, 0x00, 0xec, 0xbd, 0x04, 0x05, 0x45,
+  0x62, 0x36, 0xb2, 0x3b, 0x42, 0x1b, 0x2a, 0x1c,
+  0x40, 0x74, 0xb8, 0x11, 0x06, 0x00, 0xb8, 0x1f,
+  0xff, 0xd9
+};
+
+unsigned jpeg_off = 0;
+
+#define MIN(a,b) ((a)<(b)?(a):(b))
+
+unsigned char
+pjpeg_need_bytes_callback (unsigned char *pBuf,
+			   unsigned char buf_size,
+			   unsigned char *pBytes_actually_read,
+			   void *pCallback_data)
+{
+  unsigned n = MIN (sizeof (jpeg_data) - jpeg_off, buf_size);
+
+  memcpy (pBuf, &jpeg_data[jpeg_off], n);
+  *pBytes_actually_read = (unsigned char) n;
+  jpeg_off += n;
+  return 0;
+}
+
+
+pjpeg_image_info_t pInfo;
+
+int
+verify_benchmark (int res __attribute ((unused)))
+{
+  static const unsigned char r_ref[64] = {
+    33, 33, 33, 33, 33, 33, 33, 33,
+    32, 32, 32, 32, 32, 32, 32, 32,
+    29, 29, 29, 29, 29, 29, 29, 29,
+    25, 25, 25, 25, 25, 25, 25, 25,
+    21, 21, 21, 21, 21, 21, 21, 21,
+    17, 17, 17, 17, 17, 17, 17, 17,
+    14, 14, 14, 14, 14, 14, 14, 14,
+    13, 13, 13, 13, 13, 13, 13, 13
+  };
+  static const unsigned char g_ref[64] = {
+    53, 53, 53, 53, 53, 53, 53, 53,
+    52, 52, 52, 52, 52, 52, 52, 52,
+    49, 49, 49, 49, 49, 49, 49, 49,
+    45, 45, 45, 45, 45, 45, 45, 45,
+    41, 41, 41, 41, 41, 41, 41, 41,
+    37, 37, 37, 37, 37, 37, 37, 37,
+    34, 34, 34, 34, 34, 34, 34, 34,
+    33, 33, 33, 33, 33, 33, 33, 33
+  };
+
+  static const unsigned char b_ref[64] = {
+    67, 67, 67, 67, 67, 67, 67, 67,
+    66, 66, 66, 66, 66, 66, 66, 66,
+    63, 63, 63, 63, 63, 63, 63, 63,
+    59, 59, 59, 59, 59, 59, 59, 59,
+    55, 55, 55, 55, 55, 55, 55, 55,
+    51, 51, 51, 51, 51, 51, 51, 51,
+    48, 48, 48, 48, 48, 48, 48, 48,
+    47, 47, 47, 47, 47, 47, 47, 47
+  };
+
+  return (0 == memcmp (pInfo.m_pMCUBufR, r_ref, 64))
+    && (0 == memcmp (pInfo.m_pMCUBufG, g_ref, 64))
+    && (0 == memcmp (pInfo.m_pMCUBufB, b_ref, 64));
+}
+
+static int benchmark_body (int  rpt);
+
+static int 
+benchmark_body (int rpt)
+{
+  int i;
+
+  for (i = 0; i < rpt; i++)
+    {
+      unsigned char status;
+
+      jpeg_off = 0;
+
+      status = pjpeg_decode_init (&pInfo, pjpeg_need_bytes_callback, 0, 0);
+
+      for (;;)
+	{
+	  status = pjpeg_decode_mcu ();
+
+	  if (status == PJPG_NO_MORE_BLOCKS)
+	    break;
+	}
+    }
+
+  return 0;
+}
+
+
 int foo(const char* x) {
-	printf("%s\n", x);
+	printf("Benign: %s\n", x);
+	benchmark_body(1);
+	printf("Run jpeg\n");
 	return 0;
 }
 
@@ -88,6 +271,7 @@ int main(int argc, char **argv) {
   int option_char, i;
   // make the stack size not computable to make compiler use leave for base pointer attacks
   char dummy_buffer[argc*10];
+
   for (i=0; i<argc; i++){
     dummy_buffer[i]='a';
   }
@@ -142,7 +326,6 @@ int main(int argc, char **argv) {
   } else {
     exit(ATTACK_IMPOSSIBLE);
   }
-
 }
 
 //reliable ways to get the adresses of the return address and old base pointer
@@ -247,7 +430,7 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
       boolean buffer_selected = !contains_terminating_char((uintptr_t)buffer);
       while (!buffer_selected){
         // fprintf(stderr,"Buffer address contains terminating chars %p\n",buffer);
-        buffer += rand() % 10;
+        buffer += 0; //rand() % 10;
         buffer_selected = !contains_terminating_char((uintptr_t)buffer);
 
         // Out of Bounds
@@ -526,7 +709,7 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
           } else {
             // for the other attacks we overflow function pointer and the function
             // is called with "/bin/bash" as parameter.
-            payload.overflow_ptr = &system;
+            payload.overflow_ptr = &bar; //system;
           }
           break;
         case RETURN_ORIENTED_PROGRAMMING:
@@ -672,6 +855,7 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
 
   if (no_attack) {
 	  payload.size = 1;
+	  payload.buffer[1] = '\0';
   }
 
   /****************************************/
@@ -744,16 +928,19 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
         attack.code_ptr == LONGJMP_BUF_HEAP ||
         attack.code_ptr == LONGJMP_BUF_BSS ||
         attack.code_ptr == LONGJMP_BUF_DATA) {
+	     if(!no_attack) {
       // Point to the buffer with attack code and mangle it
       uintptr_t mangled_base_pointer = *(((uintptr_t *)payload.jmp_buffer)+1);
       *(uintptr_t *)(*(uintptr_t *)target_addr) = (uintptr_t)(rol((uintptr_t)buffer) ^
           rol((uintptr_t)payload.old_base_ptr) ^ mangled_base_pointer); // key
-
+	     }
     } else if (attack.inject_param == RETURN_INTO_LIBC){
+	     if(!no_attack)
       // Point to system to replace the func_ptr by it
-      *(uintptr_t *)(*(uintptr_t *)target_addr) = (uintptr_t)&system;
+      *(uintptr_t *)(*(uintptr_t *)target_addr) = (uintptr_t)&bar; //system;
     } else {
       // Point to the attack code
+      	     if(!no_attack)
       *(uintptr_t *)(*(uintptr_t *)target_addr) = (uintptr_t)buffer;
     }
   }
@@ -766,6 +953,10 @@ void perform_attack(int (*stack_func_ptr_param)(const char *),
       case RET_ADDR:
       case OLD_BASE_PTR:
         /* Just let the function carry on and eventually return */
+	      // invoke benchmark_body here for tradtional flow, for attack flow just return, which simulates an attack that bypass regular application execution
+	      if (no_attack) {
+		      benchmark_body(1);
+	      }
         break;
       case FUNC_PTR_STACK_VAR:
         ((int (*)(char *)) (*stack_func_ptr)) ("/bin/bash");
@@ -920,9 +1111,9 @@ boolean build_payload(CHARPAYLOAD *payload) {
         &(payload->ptr_to_correct_return_addr),
         sizeof(uintptr_t));
 
-    void * system_ptr = &system;
+    void * system_ptr = &bar; //system;
     memcpy(temp_char_buffer + payload->size - 2*sizeof(uintptr_t) - sizeof(char),
-        &system_ptr,
+        &bar, //system_ptr,
         sizeof(uintptr_t));
 
     temp_char_ptr = getenv("param_to_system");
@@ -1008,13 +1199,13 @@ boolean build_payload(CHARPAYLOAD *payload) {
           &temp_char_ptr,
           sizeof(uintptr_t));
 
-      void * system_ptr = &system;
+      void * system_ptr = &bar; //system;
       memcpy(&(payload->buffer[payload->size -
             sizeof(char) -
             sizeof(uintptr_t) -
             payload->offset_to_fake_return_addr +
             2*sizeof(uintptr_t)]),
-          &system_ptr,
+          &bar, //system_ptr,
           sizeof(uintptr_t));
 
     } else if (attack.inject_param == RETURN_ORIENTED_PROGRAMMING) {
@@ -1025,7 +1216,6 @@ boolean build_payload(CHARPAYLOAD *payload) {
       uintptr_t rop_sled[] = {
         (uintptr_t)&gadget1 + find_gadget_offset(search_chars1),
         (uintptr_t)temp_char_ptr,
-        (uintptr_t)&exit,
         (uintptr_t)&gadget2 + find_gadget_offset(search_chars2),
         (uintptr_t)&gadget3 + find_gadget_offset(search_chars3),
         (uintptr_t)&exit};
@@ -1168,7 +1358,7 @@ boolean build_payload(CHARPAYLOAD *payload) {
             &temp_char_ptr,
             sizeof(uintptr_t));
 
-        void * tmp_ptr = &system;
+        void * tmp_ptr = &bar; //system;
         memcpy(&(payload->stack_buffer[sizeof(uintptr_t)]),
             &tmp_ptr,
             sizeof(uintptr_t));
@@ -1726,15 +1916,15 @@ int find_gadget_offset(char* search_chars){
 
 // Dummy functions used to create gadgets for the ROP attack
 void gadget1(int a, int b){
-	/*
+	
   int arthur,dent,j;
   arthur = a + b / 42;
 
   char buffer[256];
-  for(j=0;j<10;j++);
-  */
+  for(j=0;j<1;j++);
+  
   __asm__(
-	"sub sp, sp, #0x170;\n"
+	"sub sp, sp, #0x60;\n"
 	"mov x1, #0;\n"
         "ldp x29, x30, [sp], #0x10;\n"
         "ret"
@@ -1750,7 +1940,27 @@ void gadget1(int a, int b){
   return;
 }
 
+//int g_temp=5;
+
 void gadget2(int a, int b){
+	if (attack_on_bss_func_ptr == 50) 
+		exit(0);
+	attack_on_bss_func_ptr++;
+
+	/*
+	if (g_temp == 0) {
+		exit(0);
+	}
+	g_temp--;
+*/
+	__asm__(
+		"mov     x29, %0\n"
+		"mov     x30, %1\n"
+		"ret"
+		:
+		: "r" (&gadget3), "r" (&gadget2)
+	       );
+
 	/*
   int ford,prefect,j;
   ford = a + b / 43;

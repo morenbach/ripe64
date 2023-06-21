@@ -182,8 +182,8 @@ for compiler in compilers:
               os.system("rm /tmp/ripe_log")
               parameters = (tech,loc,ptr,attack,func)
               parameters_str = "-t %8s -l %5s -c %18s -i %16s -f %8s" % parameters
-              sys.stdout.write('... Running %s ...\r' % parameters_str)
-              sys.stdout.flush()
+              #sys.stdout.write('... Running %s ...\r' % parameters_str)
+              #sys.stdout.flush()
               os.system("echo "+parameters_str+">> /tmp/ripe_log")
               ## Valgrind - Memcheck
               # cmdline = "(echo \"touch /tmp/ripe-eval/f_xxxx\" | G_SLICE=always-malloc G_DEBUG=gc-friendly  valgrind -v --tool=memcheck --num-callers=40 ./build/"+compiler+"_attack_gen "+parameters_str+" >> /tmp/ripe_log 2>&1) 2> /tmp/ripe_log2"+str(i)
